@@ -144,18 +144,6 @@ if (MSVC)
 endif()
 
 # ---------------------------------------------------------------------------
-# Interprocedural optimization
-
-include(CheckIPOSupported)
-check_ipo_supported(RESULT lto_supported OUTPUT error)
-
-if (lto_supported)
-  message(STATUS "${PN}: enabling link time optimization.")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE    TRUE)
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
-endif()
-
-# ---------------------------------------------------------------------------
 # Find Python if the parent project includes Python bindings
 
 if (${P}_ENABLE_PYTHON)

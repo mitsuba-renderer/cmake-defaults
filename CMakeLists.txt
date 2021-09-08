@@ -26,7 +26,6 @@ endif()
 
 # Extract project version from source
 if (${P}_VERSION_FILE)
-  message(STATUS Loading ${${P}_VERSION_FILE})
   file(STRINGS ${${P}_VERSION_FILE} TMP REGEX "#define ${P}_VERSION_(MAJOR|MINOR|PATCH) ")
 
   foreach(TMP2 ${TMP})

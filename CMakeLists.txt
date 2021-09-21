@@ -282,6 +282,25 @@ if (${P}_ENABLE_PYTHON)
     else()
       set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
       find_package(Python COMPONENTS Interpreter Development REQUIRED)
+
+      # Can't have conflicting versions of pybind11...
+      include(CheckIncludeFileCXX)
+      set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
+      if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        set(CMAKE_REQUIRED_FLAGS "-std=c++11")
+      endif()
+      check_include_file_cxx("pybind11/pybind11.h" ${P}_PYBIND11_FOUND)
+      if (${P}_PYBIND11_FOUND)
+        message(FATAL_ERROR "An existing version of pybind11 was found on "
+                "the include path, which is going to conflict with the "
+                "${PN}-provided one. Please uninstall it first (via brew, "
+                "pip uninstall, your system package manager, or similar)")
+      endif()
+
+      unset(${P}_PYBIND11_FOUND)
+      unset(CMAKE_REQUIRED_FLAGS)
+      unset(CMAKE_REQUIRED_INCLUDES)
+
       set(${P}_PYBIND11_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/pybind11"
         CACHE STRING "Path containing the 'pybind11' library used to compile ${PN}.")
       add_subdirectory(${${P}_PYBIND11_DIR} pybind11)

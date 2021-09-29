@@ -291,6 +291,7 @@ if (${P}_ENABLE_PYTHON)
       endif()
       check_include_file_cxx("pybind11/pybind11.h" ${P}_PYBIND11_FOUND)
       if (${P}_PYBIND11_FOUND)
+        unset(${P}_PYBIND11_FOUND CACHE)
         message(FATAL_ERROR "An existing version of pybind11 was found on "
                 "the include path, which is going to conflict with the "
                 "${PN}-provided one. Please uninstall it first (via brew, "

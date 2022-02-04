@@ -5,9 +5,9 @@ This repository establishes a standard build environment for RGL projects
 including at least the following:
 
 - [Mitsuba 2](https://github.com/mitsuba-renderer/mitsuba2)
-- [Enoki](https://github.com/mitsuba-renderer/enoki)
-- [Enoki-JIT](https://github.com/mitsuba-renderer/enoki-jit)
-- [Enoki-Thread](https://github.com/mitsuba-renderer/enoki-thread)
+- [Dr.Jit](https://github.com/mitsuba-renderer/drjit)
+- [Dr.Jit-Core](https://github.com/mitsuba-renderer/drjit-core)
+- [Dr.Jit-Thread](https://github.com/mitsuba-renderer/drjit-thread)
 - [Struct-JIT](https://github.com/mitsuba-renderer/struct-jit)
 
 Usage

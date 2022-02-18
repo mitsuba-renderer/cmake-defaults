@@ -7,7 +7,7 @@ including at least the following:
 - [Mitsuba 2](https://github.com/mitsuba-renderer/mitsuba2)
 - [Dr.Jit](https://github.com/mitsuba-renderer/drjit)
 - [Dr.Jit-Core](https://github.com/mitsuba-renderer/drjit-core)
-- [Dr.Jit-Thread](https://github.com/mitsuba-renderer/drjit-thread)
+- [nanothread](https://github.com/mitsuba-renderer/nanothread)
 - [Struct-JIT](https://github.com/mitsuba-renderer/struct-jit)
 
 Usage

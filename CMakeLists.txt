@@ -268,48 +268,45 @@ endif()
 # ---------------------------------------------------------------------------
 
 if (${P}_ENABLE_PYTHON)
-  if (NOT TARGET pybind11::module)
+  if (NOT TARGET nanobind::module)
     if (SKBUILD)
       execute_process(
         COMMAND
         "${PYTHON_EXECUTABLE}" -c
-        "import pybind11; print(pybind11.get_cmake_dir())"
+        "import nanobind; print(nanobind.get_cmake_dir())"
         OUTPUT_VARIABLE _tmp_dir
         OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
       list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
-      find_package(pybind11 CONFIG REQUIRED)
+      find_package(nanobind CONFIG REQUIRED)
       set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
     else()
       set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
       find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
-      # Can't have conflicting versions of pybind11...
+      # Can't have conflicting versions of nanobind...
       include(CheckIncludeFileCXX)
       set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
       if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         set(CMAKE_REQUIRED_FLAGS "-std=c++11")
       endif()
-      check_include_file_cxx("pybind11/pybind11.h" ${P}_PYBIND11_FOUND)
-      if (${P}_PYBIND11_FOUND)
-        unset(${P}_PYBIND11_FOUND CACHE)
-        message(FATAL_ERROR "An existing version of pybind11 was found on "
+      check_include_file_cxx("nanobind/nanobind.h" ${P}_NANOBIND_FOUND)
+      if (${P}_NANOBIND_FOUND)
+        unset(${P}_NANOBIND_FOUND CACHE)
+        message(FATAL_ERROR "An existing version of nanobind was found on "
                 "the include path, which is going to conflict with the "
                 "${PN}-provided one. Please uninstall it first (via brew, "
                 "pip uninstall, your system package manager, or similar)")
       endif()
 
-      unset(${P}_PYBIND11_FOUND)
+      unset(${P}_NANOBIND_FOUND)
       unset(CMAKE_REQUIRED_FLAGS)
       unset(CMAKE_REQUIRED_INCLUDES)
 
-      set(${P}_PYBIND11_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/pybind11"
-        CACHE STRING "Path containing the 'pybind11' library used to compile ${PN}.")
-      add_subdirectory(${${P}_PYBIND11_DIR} pybind11)
-      mark_as_advanced(
-        USE_PYTHON_INCLUDE_DIR PYBIND11_INSTALL PYBIND11_TEST PYBIND11_NOPYTHON
-        PYBIND11_FINDPYTHON PYBIND11_PYTHON_VERSION PYBIND11_WERROR
-        ${P}_PYBIND11_DIR)
-      endif()
+      set(${P}_NANOBIND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanobind"
+        CACHE STRING "Path containing the 'nanobind' library used to compile ${PN}.")
+      add_subdirectory(${${P}_NANOBIND_DIR} nanobind)
+      mark_as_advanced(${P}_NANOBIND_DIR)
+    endif()
   endif()
 endif()
 

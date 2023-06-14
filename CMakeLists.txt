@@ -78,8 +78,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU)$")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
-    message(FATAL_ERROR "Your version of Clang is too old (found version ${CMAKE_CXX_COMPILER_VERSION}. Please use at least Clang 7.0)")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+    message(FATAL_ERROR "Your version of Clang is too old (found version ${CMAKE_CXX_COMPILER_VERSION}. Please use at least Clang 10.0)")
   endif()
 endif()
 
@@ -114,12 +114,24 @@ endif()
 # Do a release build if nothing was specified
 # ---------------------------------------------------------------------------
 
-if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "${PN}: setting build type to 'Release' as none was specified.")
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
+get_property(${P}_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+if (${P}_MULTI_CONFIG)
+  if (NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "${PN}: setting build type to 'Release' as none was specified.")
+    set(CMAKE_CONFIGURATION_TYPES "Release" "Debug" "MinSizeRel" "RelWithDebInfo"
+      CACHE STRING "Choose the types of builds available to multi-config generators." FORCE)
+  endif()
+else()
+  if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "${PN}: setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+      "MinSizeRel" "RelWithDebInfo")
+  endif()
 endif()
+
+unset(${P}_MULTI_CONFIG)
 
 # ---------------------------------------------------------------------------
 # Compile for the native system architecture (assumes AVX2 on windows). When
@@ -136,7 +148,7 @@ if (MSVC)
     set(${P}_NATIVE_FLAGS_DEFAULT "/arch:AVX2")
   endif()
 elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-  set(${P}_NATIVE_FLAGS_DEFAULT "-mcpu=apple-a12")
+  set(${P}_NATIVE_FLAGS_DEFAULT "-mcpu=apple-m1")
 else()
   if (SKBUILD)
     # Reasonably portable binaries for PyPI
@@ -268,45 +280,41 @@ endif()
 # ---------------------------------------------------------------------------
 
 if (${P}_ENABLE_PYTHON)
-  if (NOT TARGET nanobind::module)
-    if (SKBUILD)
-      execute_process(
-        COMMAND
-        "${PYTHON_EXECUTABLE}" -c
-        "import nanobind; print(nanobind.get_cmake_dir())"
-        OUTPUT_VARIABLE _tmp_dir
-        OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
-      list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
-      find_package(nanobind CONFIG REQUIRED)
-      set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
-    else()
-      set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
-      find_package(Python COMPONENTS Interpreter Development REQUIRED)
+  set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
 
-      # Can't have conflicting versions of nanobind...
-      include(CheckIncludeFileCXX)
-      set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
-      if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        set(CMAKE_REQUIRED_FLAGS "-std=c++11")
-      endif()
-      check_include_file_cxx("nanobind/nanobind.h" ${P}_NANOBIND_FOUND)
-      if (${P}_NANOBIND_FOUND)
-        unset(${P}_NANOBIND_FOUND CACHE)
-        message(FATAL_ERROR "An existing version of nanobind was found on "
-                "the include path, which is going to conflict with the "
-                "${PN}-provided one. Please uninstall it first (via brew, "
-                "pip uninstall, your system package manager, or similar)")
-      endif()
+  # Try to import all Python components potentially needed by nanobind
+  find_package(Python 3.8
+    REQUIRED COMPONENTS Interpreter Development.Module
+    OPTIONAL_COMPONENTS Development.SABIModule)
 
-      unset(${P}_NANOBIND_FOUND)
-      unset(CMAKE_REQUIRED_FLAGS)
-      unset(CMAKE_REQUIRED_INCLUDES)
-
-      set(${P}_NANOBIND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanobind"
-        CACHE STRING "Path containing the 'nanobind' library used to compile ${PN}.")
-      add_subdirectory(${${P}_NANOBIND_DIR} nanobind)
-      mark_as_advanced(${P}_NANOBIND_DIR)
+  if (SKBUILD)
+    # Import nanobind through CMake's find_package mechanism
+    find_package(nanobind CONFIG REQUIRED)
+  else()
+    # Can't have conflicting versions of nanobind...
+    include(CheckIncludeFileCXX)
+    set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+      set(CMAKE_REQUIRED_FLAGS "-std=c++17")
     endif()
+    check_include_file_cxx("nanobind/nanobind.h" ${P}_NANOBIND_FOUND)
+    if (${P}_NANOBIND_FOUND)
+      unset(${P}_NANOBIND_FOUND CACHE)
+      message(FATAL_ERROR "An existing version of nanobind was found on "
+              "the include path, which is going to conflict with the "
+              "${PN}-provided one. Please uninstall it first (via brew, "
+              "pip uninstall, your system package manager, or similar)")
+    endif()
+
+    unset(${P}_NANOBIND_FOUND)
+    unset(CMAKE_REQUIRED_FLAGS)
+    unset(CMAKE_REQUIRED_INCLUDES)
+
+    # Import as git submodule
+    set(${P}_NANOBIND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanobind"
+      CACHE STRING "Path containing the 'nanobind' library used to compile ${PN}.")
+    add_subdirectory(${${P}_NANOBIND_DIR} nanobind)
+    mark_as_advanced(${P}_NANOBIND_DIR)
   endif()
 endif()
 

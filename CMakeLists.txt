@@ -136,7 +136,7 @@ if (MSVC)
     set(${P}_NATIVE_FLAGS_DEFAULT "/arch:AVX2")
   endif()
 elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-  set(${P}_NATIVE_FLAGS_DEFAULT "-mcpu=apple-a12")
+  set(${P}_NATIVE_FLAGS_DEFAULT "-mcpu=apple-m1")
 else()
   if (SKBUILD)
     # Reasonably portable binaries for PyPI

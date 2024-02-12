@@ -155,7 +155,7 @@ endif()
 set(${P}_NATIVE_FLAGS ${${P}_NATIVE_FLAGS_DEFAULT} CACHE STRING
     "Compilation flags used to target the host processor architecture.")
 
-add_compile_options(${${P}_NATIVE_FLAGS})
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${${P}_NATIVE_FLAGS}>)
 unset(${P}_NATIVE_FLAGS_DEFAULT)
 
 # ---------------------------------------------------------------------------
@@ -213,10 +213,12 @@ if (MSVC)
   if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   else()
-    add_compile_options(/W4)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W4>)
   endif()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  add_compile_options(-Wall -Wextra -Wno-unused-local-typedefs)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-unused-local-typedefs>)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -238,7 +240,9 @@ endif()
 # ---------------------------------------------------------------------------
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_definitions(-fno-math-errno -ffp-contract=fast -fno-trapping-math)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-math-errno>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-ffp-contract=fast>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-trapping-math>)
 endif()
 
 # ---------------------------------------------------------------------------

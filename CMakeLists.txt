@@ -273,26 +273,27 @@ endif()
 
 if (${P}_ENABLE_PYTHON)
   if (NOT TARGET nanobind::module)
+    # Try to import all Python components potentially needed by nanobind
+    set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
+    find_package(Python 3.8
+      REQUIRED COMPONENTS Interpreter Development.Module
+      OPTIONAL_COMPONENTS Development.SABIModule)
+
     if (SKBUILD)
       execute_process(
-        COMMAND
-        "${PYTHON_EXECUTABLE}" -c
-        "import nanobind; print(nanobind.get_cmake_dir())"
-        OUTPUT_VARIABLE _tmp_dir
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_VARIABLE NB_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
-      list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
+      list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
       find_package(nanobind CONFIG REQUIRED)
-      set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
     else()
-      set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
-      find_package(Python COMPONENTS Interpreter Development REQUIRED)
-
       # Can't have conflicting versions of nanobind...
       include(CheckIncludeFileCXX)
       set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
       if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        set(CMAKE_REQUIRED_FLAGS "-std=c++11")
+        set(CMAKE_REQUIRED_FLAGS "-std=c++17")
       endif()
+
       check_include_file_cxx("nanobind/nanobind.h" ${P}_NANOBIND_FOUND)
       if (${P}_NANOBIND_FOUND)
         unset(${P}_NANOBIND_FOUND CACHE)
@@ -308,6 +309,7 @@ if (${P}_ENABLE_PYTHON)
 
       set(${P}_NANOBIND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/nanobind"
         CACHE STRING "Path containing the 'nanobind' library used to compile ${PN}.")
+
       add_subdirectory(${${P}_NANOBIND_DIR} nanobind)
       mark_as_advanced(${P}_NANOBIND_DIR)
     endif()

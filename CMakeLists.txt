@@ -275,8 +275,15 @@ if (${P}_ENABLE_PYTHON)
   if (NOT TARGET nanobind::module)
     # Try to import all Python components potentially needed by nanobind
     set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python
+
+    if (CMAKE_VERSION VERSION_LESS 3.18)
+      set(PYTHON_DEV_MODULE Development)
+    else()
+      set(PYTHON_DEV_MODULE Development.Module)
+    endif()
+
     find_package(Python 3.8
-      REQUIRED COMPONENTS Interpreter Development.Module
+      REQUIRED COMPONENTS Interpreter ${PYTHON_DEV_MODULE}
       OPTIONAL_COMPONENTS Development.SABIModule)
 
     if (SKBUILD)

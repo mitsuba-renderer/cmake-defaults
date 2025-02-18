@@ -159,51 +159,17 @@ add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${${P}_NATIVE_FLAGS}>)
 unset(${P}_NATIVE_FLAGS_DEFAULT)
 
 # ---------------------------------------------------------------------------
-# Prefer libc++ in conjunction with Clang
-# ---------------------------------------------------------------------------
-
-include(CheckCXXSourceRuns)
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-
-macro(CHECK_CXX_COMPILER_AND_LINKER_FLAGS _RESULT _CXX_FLAGS _LINKER_FLAGS)
-  set(CMAKE_REQUIRED_FLAGS ${_CXX_FLAGS})
-  set(CMAKE_REQUIRED_LIBRARIES ${_LINKER_FLAGS})
-  set(CMAKE_REQUIRED_QUIET TRUE)
-  check_cxx_source_runs("#include <iostream>\nint main(int argc, char **argv) { std::cout << \"test\"; return 0; }"
-                        ${_RESULT})
-  set(CMAKE_REQUIRED_FLAGS "")
-  set(CMAKE_REQUIRED_LIBRARIES "")
-endmacro()
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_FLAGS MATCHES "-stdlib=libc\\+\\+")
-  CHECK_CXX_COMPILER_AND_LINKER_FLAGS(HAS_LIBCPP "-stdlib=libc++" "-stdlib=libc++")
-  if (APPLE OR HAS_LIBCPP)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -D_LIBCPP_VERSION")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
-    message(STATUS "${PN}: using libc++.")
-  else()
-    CHECK_CXX_COMPILER_AND_LINKER_FLAGS(HAS_LIBCPP_AND_CPPABI "-stdlib=libc++" "-stdlib=libc++ -lc++abi")
-    if (HAS_LIBCPP_AND_CPPABI)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -D_LIBCPP_VERSION")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
-      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
-      message(STATUS "${PN}: using libc++ and libc++abi.")
-    else()
-      message(FATAL_ERROR "When Clang is used to compile ${PN}, libc++ "
-          "must be available -- GCC's libstdc++ is not supported! (please install "
-          "the libc++ development headers, provided e.g. by the packages "
-          "'libc++-dev' and 'libc++abi-dev' on Debian/Ubuntu).")
-    endif()
-  endif()
-endif()
-
-# ---------------------------------------------------------------------------
 # Symbol visibility = hidden by default
 # ---------------------------------------------------------------------------
 
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
+# ---------------------------------------------------------------------------
+# Useful includes
+# ---------------------------------------------------------------------------
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
 # ---------------------------------------------------------------------------
 # Compile with a few more compiler warnings turned on

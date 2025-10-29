@@ -123,7 +123,7 @@ endif()
 
 # ---------------------------------------------------------------------------
 # Compile for the native system architecture (assumes AVX2 on windows). When
-# enoki is compiled as part of a PyPI package via scikit-build, adopt a lower
+# DrJit is compiled as part of a PyPI package via scikit-build, adopt a lower
 # target architecture (Ivy Bridge, which has the AVX and F16C extensions). An
 # M1-like architecture is assumed for arm64 builds on macOS.
 # ---------------------------------------------------------------------------
@@ -139,8 +139,13 @@ elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
   set(${P}_NATIVE_FLAGS_DEFAULT "-mcpu=apple-m1")
 else()
   if (SKBUILD)
-    # Reasonably portable binaries for PyPI
-    set(${P}_NATIVE_FLAGS_DEFAULT "-march=ivybridge")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+      # ARM64 architecture - use native or a baseline ARM arch
+      set(${P}_NATIVE_FLAGS_DEFAULT "-march=armv8-a")
+    else()
+      # x86-64 architecture - use Ivy Bridge baseline
+      set(${P}_NATIVE_FLAGS_DEFAULT "-march=ivybridge")
+    endif()
   else()
     set(${P}_NATIVE_FLAGS_DEFAULT "-march=native")
   endif()

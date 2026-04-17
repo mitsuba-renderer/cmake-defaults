@@ -122,16 +122,14 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # ---------------------------------------------------------------------------
-# Compile for the native system architecture (assumes AVX2 on windows). When
-# DrJit is compiled as part of a PyPI package via scikit-build, adopt a lower
-# target architecture (Ivy Bridge, which has the AVX and F16C extensions). An
-# M1-like architecture is assumed for arm64 builds on macOS.
+# Compile for the native system architecture. PyPI / scikit-build builds drop
+# to a portable baseline: Haswell on x86-64 (AVX2 + FMA3, the earliest Intel
+# arch with both), ARMv8-A on aarch64, and Apple M1 on arm64 macOS.
 # ---------------------------------------------------------------------------
 
 if (MSVC)
   if (SKBUILD)
-    # Reasonably portable binaries for PyPI
-    set(${P}_NATIVE_FLAGS_DEFAULT "/arch:AVX")
+    set(${P}_NATIVE_FLAGS_DEFAULT "/arch:AVX2")
   else()
     set(${P}_NATIVE_FLAGS_DEFAULT "/arch:AVX2")
   endif()
@@ -140,11 +138,9 @@ elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
 else()
   if (SKBUILD)
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
-      # ARM64 architecture - use native or a baseline ARM arch
       set(${P}_NATIVE_FLAGS_DEFAULT "-march=armv8-a")
     else()
-      # x86-64 architecture - use Ivy Bridge baseline
-      set(${P}_NATIVE_FLAGS_DEFAULT "-march=ivybridge")
+      set(${P}_NATIVE_FLAGS_DEFAULT "-march=haswell")
     endif()
   else()
     set(${P}_NATIVE_FLAGS_DEFAULT "-march=native")

@@ -213,6 +213,18 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 endif()
 
 # ---------------------------------------------------------------------------
+# Opt into the faster TLS ABI (TLSDESC) for thread-local accesses on Linux
+# ---------------------------------------------------------------------------
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+  include(CheckCXXCompilerFlag)
+  check_cxx_compiler_flag(-mtls-dialect=gnu2 RGL_HAVE_MTLS_GNU2)
+  if (RGL_HAVE_MTLS_GNU2)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-mtls-dialect=gnu2>)
+  endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # Force colored output for the Ninja generator
 # ---------------------------------------------------------------------------
 
